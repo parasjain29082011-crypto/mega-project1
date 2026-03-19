@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ancient Trace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=UnifrakturMaguntia&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="theme-color" content="#0d0a07">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Ancient Trace">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+</head>
+<body>
+  <div class="noise-overlay" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+  <svg class="bg-lines" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <line x1="0" y1="0" x2="100%" y2="100%"/>
+    <line x1="100%" y1="0" x2="0" y2="100%"/>
+    <line x1="0" y1="50%" x2="100%" y2="50%"/>
+    <line x1="50%" y1="0" x2="50%" y2="100%"/>
+    <rect x="40" y="40" width="160" height="100" rx="2"/>
+    <rect x="calc(100% - 200px)" y="40" width="160" height="100" rx="2"/>
+    <rect x="40" y="calc(100% - 140px)" width="160" height="100" rx="2"/>
+    <rect x="calc(100% - 200px)" y="calc(100% - 140px)" width="160" height="100" rx="2"/>
+    <rect x="20" y="20" width="calc(100% - 40px)" height="calc(100% - 40px)" rx="4"/>
+    <ellipse cx="50%" cy="50%" rx="260" ry="160"/>
+  </svg>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="nav-brand">
+        <span class="brand-ornament">✦</span>
+        <span class="compass-icon">🧭</span>
+        <span class="brand-name">Ancient Trace</span>
+        <span class="brand-ornament">✦</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#" class="nav-tab active" data-tab="explore">Explore</a></li>
+        <li><a href="#" class="nav-tab" data-tab="timeline">Timeline</a></li>
+        <li><a href="#" class="nav-tab" data-tab="artifacts">Artifacts</a></li>
+        <li><a href="#" class="nav-tab" data-tab="sources">Sources</a></li>
+        <li><a href="#" class="nav-cta">Begin Journey</a></li>
+      </ul>
+      <div class="nav-controls">
+        <button id="theme-toggle" class="icon-btn" title="Toggle theme">☀️</button>
+        <button id="history-btn" class="icon-btn" title="Past searches">📜</button>
+        <button id="oracle-btn" class="icon-btn" title="Ask the Oracle">🔮</button>
+        <button id="login-btn" class="auth-btn">Sign In</button>
+        <div id="user-info" class="user-info" style="display:none;">
+          <img id="user-photo" class="user-photo" alt=""/>
+          <span id="user-name"></span>
+          <button id="logout-btn" class="logout-btn">Out</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- PAST SEARCHES SIDEBAR (LEFT) -->
+  <aside id="past-sidebar" class="past-sidebar">
+    <div class="sidebar-header">
+      <h3>📜 Past Searches</h3>
+      <button id="close-sidebar" class="close-btn">×</button>
+    </div>
+    <div id="searches-list" class="searches-list">
+      <p class="no-searches">Sign in to view history</p>
+    </div>
+  </aside>
+
+  <!-- ASK THE ORACLE PANEL (RIGHT) -->
+  <aside id="oracle-panel" class="oracle-panel">
+
+    <!-- Header -->
+    <div class="oracle-header">
+      <div class="oracle-title-row">
+        <span class="oracle-title-text">🔮 Ask the Oracle</span>
+        <button id="close-oracle" class="close-btn">×</button>
+      </div>
+
+      <!-- Two tabs -->
+      <div class="oracle-tabs">
+        <button class="oracle-tab active" data-otab="location">📍 This Location</button>
+        <button class="oracle-tab" data-otab="allhistory">🌍 Full History</button>
+      </div>
+
+      <!-- Current location badge -->
+      <div id="oracle-location-badge" class="oracle-location-badge" style="display:none;">
+        <span class="badge-icon">📍</span>
+        <span id="oracle-location-name" class="badge-name"></span>
+        <button id="oracle-clear-chat" class="oracle-clear-btn" title="Clear location chat">🗑</button>
+      </div>
+
+      <!-- Voice + TTS row -->
+      <div class="oracle-voice-row">
+        <label class="voice-label">🗣</label>
+        <select id="voice-select" class="voice-select"></select>
+        <button id="tts-play" class="tts-btn" title="Play summary">▶</button>
+        <button id="tts-pause" class="tts-btn" title="Pause" style="display:none;">⏸</button>
+        <button id="tts-stop" class="tts-btn" title="Stop">⏹</button>
+      </div>
+    </div>
+
+    <!-- Location chat -->
+    <div id="oracle-loc-messages" class="oracle-messages">
+      <div class="oracle-welcome">
+        <div class="oracle-welcome-icon">🏛️</div>
+        <p>I am the Oracle of Ancient Trace.</p>
+        <p>Search a location first, then ask me anything about its history.</p>
+      </div>
+    </div>
+
+    <!-- All history chat -->
+    <div id="oracle-all-messages" class="oracle-messages" style="display:none;"></div>
+
+    <!-- Suggested questions -->
+    <div id="oracle-suggestions" class="oracle-suggestions" style="display:none;"></div>
+
+    <!-- Input -->
+    <div class="oracle-input-wrap">
+      <input id="oracle-input" class="oracle-input" type="text" placeholder="Ask the Oracle…"/>
+      <button id="oracle-send" class="oracle-send-btn">⚡</button>
+    </div>
+  </aside>
+
+  <!-- HERO -->
+  <main class="hero">
+    <div class="gold-divider"><span class="div-orn">⚜</span></div>
+    <div class="hero-title-block">
+      <p class="hero-subtitle">✦ Unearth the Past ✦</p>
+      <h1 class="hero-title"><span class="title-orn">❖</span>Ancient<br/>Trace<span class="title-orn">❖</span></h1>
+      <p class="hero-tagline">"Every place holds a forgotten story"</p>
+    </div>
+    <div class="gold-divider mid-div"><span class="div-orn">✦</span></div>
+
+    <!-- SEARCH -->
+    <div class="search-block">
+      <div class="search-label">
+        <span class="search-label-text">Search a location across history</span>
+      </div>
+      <div class="search-bar-wrapper">
+        <input id="search-input" type="text" class="search-input" placeholder="Enter any location…" autocomplete="off"/>
+        <div id="search-suggestions" class="search-suggestions"></div>
+      </div>
+      <button id="discover-btn" class="discover-btn" type="button">
+        <span class="btn-seal">⚜</span> Discover Its History <span class="btn-seal">⚜</span>
+      </button>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="results-section" class="results-section" style="display:none;">
+      <div id="loading" class="loading-container" style="display:none;">
+        <div class="compass-spinner">🧭</div>
+        <p class="loading-text">Unearthing the past…</p>
+      </div>
+      <div id="bookmark-bar" class="bookmark-bar" style="display:none;">
+        <button id="bookmark-btn" class="bookmark-btn">🗿 Carve Into Stone</button>
+        <span id="bookmark-status" class="bookmark-status"></span>
+      </div>
+      <div id="results-content" class="results-content"></div>
+      <div id="sources-container" class="sources-container" style="display:none;"></div>
+      <div id="timeline-panel" class="timeline-panel" style="display:none;"></div>
+      <div id="artifacts-panel" class="artifacts-panel" style="display:none;"></div>
+    </div>
+
+    <!-- CHIPS -->
+    <div class="feature-row">
+      <div class="feature-chip"><span>🏛️</span><span>Ancient Civilisations</span></div>
+      <div class="chip-sep">✦</div>
+      <div class="feature-chip"><span>⚔️</span><span>Battles & Empires</span></div>
+      <div class="chip-sep">✦</div>
+      <div class="feature-chip"><span>📜</span><span>Lost Chronicles</span></div>
+      <div class="chip-sep">✦</div>
+      <div class="feature-chip"><span>🗺️</span><span>Forgotten Maps</span></div>
+    </div>
+    <div class="gold-divider bottom-div"><span class="div-orn">❖</span></div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p class="footer-tagline"><span>✦</span> Uncover the secrets of your world <span>✦</span></p>
+      <p class="footer-copy">© 2025 Ancient Trace · All epochs reserved</p>
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  <script>
+    firebase.initializeApp({
+      apiKey:            "AIzaSyDAwLsdNq9WwXqlfY2vokBSuIy0hEb6Iv8",
+      authDomain:        "ancient-unravel.firebaseapp.com",
+      databaseURL:       "https://ancient-unravel-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId:         "ancient-unravel",
+      storageBucket:     "ancient-unravel.firebasestorage.app",
+      messagingSenderId: "79131670824",
+      appId:             "1:79131670824:web:2fe310c3c10042b1283810"
+    });
+  </script>
+  <script src="app.js"></script>
+</body>
+</html>
